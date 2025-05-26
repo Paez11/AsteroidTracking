@@ -1,0 +1,16 @@
+{
+  "name": "hdfs3-asteroids-sink-connector",
+  "config": {
+    "connector.class": "io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+    "tasks.max": "3",
+    "confluent.topic.bootstrap.servers": "192.168.11.10:9094",
+    "topics": "asteroid-events",
+    "store.url": "hdfs://cluster-bda:9000/bda/kafka/AsteroidTracking",
+    "logs.dir": "logs/hdfs3sink",
+    "format.class": "io.confluent.connect.hdfs3.json.JsonFormat",
+    "path.format": "'year'=YYYY/'month'=MM/'day'=dd",
+    "flush.size": "1000",
+    "hadoop.conf.dir": "/opt/hadoop-3.4.1/etc/hadoop/",
+    "hadoop.home": "/opt/hadoop-3.4.1/"
+  }
+}
