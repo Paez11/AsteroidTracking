@@ -46,7 +46,7 @@
     \end{center}
     \vspace{0.1cm}
     \begin{center}
-     \Large \bfseries{Proyecto final BDA}
+     \Large \bfseries{AsteroidTracking}
     \end{center}
     \vspace{0.0001cm}
     \begin{center}
@@ -55,7 +55,7 @@
         \vspace{2 cm}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=.6\textwidth]{assets/portada.jpg}
+    \includegraphics[width=.5\textwidth]{assets/portada.png}
     \label{fig:my_label}
 \end{figure}
     \vspace{0.2 cm}
@@ -64,7 +64,6 @@
     \end{center}
     \vspace{4 cm}
 \null\hfill \textbf{Desarrollado por:}
-\\
 \\
 \null\hfill Víctor Páez Anguita
 \clearpage
@@ -153,62 +152,163 @@
 
 \section{Introducción}
 
-Este proyecto consiste en el desarrollo de un sistema completo de Big Data cuyo objetivo es la detección 
-y análisis de objetos cercanos a la Tierra (NEOs, por sus siglas en inglés), como asteroides 
-potencialmente peligrosos. A partir de un conjunto de datos base real proporcionado por la NASA 
-(Sentry System), se generan datos sintéticos tanto en modo batch como en tiempo real (streaming) 
-para simular un flujo continuo de información que pueda ser procesado, transformado y visualizado.
+AsteroidTracking consiste en el desarrollo de un sistema completo de Big Data cuyo objetivo es la detección 
+y análisis en tiempo real de objetos cercanos a la Tierra (NEOs, por sus siglas en inglés), como asteroides,
+cometas, satélites y otros tipos de objetos potencialmente peligrosos. La idea principal es obtener estos datos
+a partir de un conjunto de datos base real proporcionado por la API de la NASA  \cite[(Sentry System)]{Sentry-System}.
+El inconveniente es que este conjunto de datos no es lo suficientemente grande ni contiene datos en tiempo real,
+por lo que he obtado por generar datos sintéticos.
 \\
 \\
-Este proyecto de big data tiene por objetivo la detección y análisis de objectos cercanos a la Tierra
-como asteroides, cometas, satelites y otros tipos de objetos que pueden llegar a ser potencialmente
-peligrosos. 
-\\
-Para los datos he utilizado un dataset real de referencia de la NASA el cuál esta en el siguiente
-enlace: 
-\\
-\\
-\url{https://cneos.jpl.nasa.gov/sentry/}.
-\\
-\\
-El problema que tenemos es que este dataset al no ser lo suficientemente grande, y Además
-de que no contiene datos en tiempo real, he decidido crear un dataset con datos sintéticos,
-basado en el dataset anterior y añadiendo algunos datos más. Los datos sintéticos serán 
-generados con la librería Faker, que permite crear datos falsos de forma sencilla y rápida.
-\\
-\\
-\url{https://github.com/joke2k/faker}.
-\\
-\\
-De este modo puedo simular un flujo de datos continuo que pueda ser procesado, transformado 
-y visualizado.
+El objetivo final es crear un bussiness Intelligence que permita la visualización y análisis de estos datos,
+descubriendo patrones y tendencias que puedan ayudar a identificar que objetos y que características son
+potencialmente peligrosos, así como la posibilidad de generar alertas en función de parámetros críticos como
+la proximidad, la masa o la velocidad del asteroide.
 \\
 \\
 El sistema implementa todo el stack tecnológico necesario. Teniendo una arquitectura basada en 
 un clúster de Apache hadoop desplegado en un entorno distribuido con HDFS, que permite realizar
-la ingesta de datos recogeremos los datos con un cluster de kafka que se encargará de recibir
+la ingesta de datos con un cluster de kafka que se encargará de recibir
 los datos en tiempo real y almacenarlos en un topic. para su posterior procesamiento utilizando
 las APIs de Spark Streaming y Spark SQL.
 \\
 \\
-Los datos origen han sido diseñados para incluir valores realistas (como fecha de posible impacto, 
-distancia mínima a la Tierra, probabilidad de colisión o tamaño del objeto), junto con datos 
-erróneos o incompletos, con el fin de justificar y aplicar transformaciones durante la fase de ETL. 
-El conocimiento que se pretende extraer del sistema incluye la identificación y clasificación de 
-objetos potencialmente peligrosos, el análisis de tendencias a lo largo del tiempo, y la 
-posibilidad de generar alertas en función de parámetros críticos como la proximidad o la 
-velocidad del asteroide.
+Los datos origen han sido diseñados para incluir valores realistas como si recopilarlos de la imagen
+de un telescopio se tratase (como diametro, brillo del objeto y ruido de la imagen(simulando la interferencia)), 
+junto con datos erróneos o incompletos, con el fin de justificar y aplicar transformaciones durante la fase de ETL.
+La información que se prentende extraer de estos datos son metricas que nos ayudaran a extraer conocimiento como
+(superficie, velocidad, distancia, masa, etc.).
 \\
 \\
-Mediante la integración de Power BI, se realizarán las correspondientes visualizaciones 
+Mediante la integración de Prometheus y Grafana, se realizarán las correspondientes visualizaciones 
 a través de los dashboards para facilitar la toma de decisiones y el análisis exploratorio de 
 los resultados.
 
 \clearpage
 
-\section{Ingesta de datos}
+\section{Arquitectura del sistema}
 
+Para el desarrollo de este proyecto se ha utilizado una arquitectura distribuida basada en un clúster de Apache Hadoop,
+que permite el procesamiento y almacenamiento de grandes volúmenes de datos. El clúster está compuesto por 4 maquinas virtuales,
+las cuales 1 de ellas actúa como nodo maestro y las otras 3 como nodos esclavos.
+El nodo maestro se encarga de gestionar el clúster, coordinando las tareas de procesamiento y almacenamiento,
+mientras que los nodos esclavos se encargan de ejecutar las tareas de procesamiento y almacenamiento de datos.
 
+\section{Genereación de datos sintéticos}
+
+Como he mencionado anteriormente, el conjunto de datos se genera de forma sintética para simular la ingesta de datos en tiempo real.
+Para ello, se ha utilizado la librería Faker \cite[Faker]{joke2k-faker} y \cite[numpy]{numpy} que permite generar datos sintéticos 
+de forma aleatoria y realista. El script que se encargará de esto es \texttt{neo\_generate\_synthetic\_data.py}, (el cual se
+encuentra dentro de la carpeta \texttt{src/scripts}) del repositorio. Dentro del script tenemos las respetivas funciones
+que se encargaran de generar los datos. Simulando la recolecta de información de un telescopio (diametro, brillo del objeto y 
+ruido de la imagen), además de la generación de coordenadas celestiales sobre estos objetos (horas y grados).
+\\
+Finalmente tenemos la generación de un archivo pipe o FIFO que se encargará de recoger estos datos en formato JSON y enviarlos 
+al productor de Kafka para simular la ingesta de datos en tiempo real de una API. El script \texttt{neo\_data\_producer.py} 
+actuará como productor, recibiendo los datos del archivo pipe y enviándolos al topic de Kafka correspondiente.
+
+\section{procesamiento de datos}
+
+Para el procesamiento de datos se ha utilizado Apache Spark, que permite el procesamiento de grandes volúmenes de datos de 
+forma distribuida. Teniendo 3 archivos que actuarán como workers, los cuales se encargarán de procesar los datos
+recibidos del topic de Kafka \texttt{neo\_raw\_data}. Para ello tenemos el script \texttt{spark\_asteroidTrackingProcessing.py}, que se
+encargará de:
+
+\subsection{Consumidor}
+Utiliza Spark Structured Streaming para:
+
+\begin{itemize}
+  \item Conectarse al broker Kafka (192.168.11.10:9094).
+  \item Leer mensajes en tiempo real del tópico \texttt{neo\_raw\_data}.
+  \item Interpretar cada mensaje como un JSON que contiene información observacional 
+        (timestamp, coordenadas, diámetro, brillo, ruido, etc.).
+\end{itemize}
+
+\subsection{Transformación de datos}
+Una vez leídos los datos en bruto, se aplican transformaciones para calcular métricas físicas y orbitales realistas de cada asteroide:
+
+\begin{itemize}
+  \item Conversión de RA/DEC a coordenadas cartesianas tridimensionales (x, y, z) para averiguar la distancia del asteroide a la Tierra.
+  \item Cálculo de la masa del asteroide a partir de su diámetro y brillo, utilizando una fórmula simplificada. Sacando además
+  densidad, volumen y superficie.
+  \item Cálculo de la velocidad de escape en función de masa y radio.
+  \item Parametros orbitales (Ejes mayor y menor, Eccentricidad, Período orbital, inclinación orbital, Periapsis)
+  \item Clasificación de amenaza por probabilidad de impacto (alto > 0.01, Medio > 0.001, Bajo < 0.001)
+\end{itemize}
+
+\subsection{Almacenamiento en HDFS}
+
+Los datos enriquecidos se escriben directamente en HDFS, usando el formato JSON (en formato JSON para dar más versatilidad a
+los datos). La escritura está configurada para:
+
+\begin{itemize}
+  \item Guardar en la ruta: \texttt{hdfs://cluster-bda:9000/bda/kafka/AsteroidTracking}
+  \item Organizar los datos en carpetas por:
+  \begin{itemize}
+    \item Tópico (topic=asteroid-events)
+    \item Partición lógica Spark (partition=X)
+    \item Fecha (date=YYYY-MM-DD)
+  \end{itemize}
+\end{itemize}
+
+\begin{verbatim}
+  query = (out_df
+    .writeStream
+    .format("json")
+    .partitionBy("topic", "partition", "date")
+    .option("path", "hdfs://cluster-bda:9000/bda/kafka/AsteroidTracking")
+    .option("checkpointLocation", "hdfs://cluster-bda:9000/bda/kafka
+    /AsteroidTracking/checkpoints/asteroid-stream")
+    .outputMode("append")
+    .start())
+\end{verbatim}
+
+El uso de checkpointLocation garantiza tolerancia a fallos y recuperación del estado del stream.
+
+\section{Visualización}
+
+Para la visualización de los datos como he mencionado anteriormente, se implementó una arquitectura de monitorización y visualización 
+utilizando Prometheus y Grafana, con el objetivo de supervisar tanto las métricas técnicas del sistema como los indicadores 
+científicos derivados del procesamiento de los asteroides.
+
+\subsection{Prometheus + JMX Exporter}
+
+Prometheus fue configurado como sistema de monitorización principal. A través del JMX Exporter, se habilitó la recolección de métricas 
+JVM en los servicios Spark y Kafka, permitiendo supervisar su rendimiento en tiempo real: uso de CPU, memoria, latencia de 
+procesamiento y throughput.
+
+\subsection{Exportador personalizado}
+
+Además de las métricas del sistema, hay un exportador personalizado \texttt{asteroid\_exporter.py} con el objetivo de 
+exponer métricas científicas enriquecidas sobre los asteroides procesados por Spark.
+Este exportador se encarga de conectarse a HDFS a través de WebHDFS para acceder directamente a los archivos JSON enriquecidos generados 
+por Spark Streaming. Luego recorre todas las particiones y fechas disponibles para procesar los datos sin necesidad de descargarlos previamente.
+Finalmente expone las métricas en formato Prometheus en el puerto :9091, tanto agregadas como individuales que son recogidas por 
+Prometheus por un job definido en \texttt{prometheus\_asteroidTracking\_mon\_kafka.yml}
+
+\subsection{Dashboards de Grafana}
+
+Para visualizar las métricas generadas por el exportador, se diseñó un dashboard en Grafana \texttt{asteroid\_dashboard.json} 
+que ofrece una visión clara, interactiva y dinámica del estado actual de los asteroides detectados.
+El dashboard contiene los siguientes paneles:
+\begin{itemize}
+  \item Distribución de amenaza: gráfico tipo donut que muestra el porcentaje de objetos clasificados como 
+  ALTO, MEDIO o BAJO. Incluye enlaces interactivos que permiten filtrar el resto de paneles por nivel de amenaza.
+  \item Top 50 asteroides por probabilidad de impacto: tabla ordenada por la métrica
+  \\ 
+  \texttt{asteroid\_impact\_probability}, 
+  útil para identificar rápidamente los objetos más peligrosos.
+  \item Comparativa de masa y densidad: gráfico de barras que compara la masa con la densidad de los asteroides que presentan riesgo 
+  de impacto (\texttt{impact\_probability} > 0).
+  \item Evolución de la distancia mínima (AU): gráfico de líneas que muestra la distancia mínima estimada para cada asteroide con 
+  posibilidad de impacto, permitiendo observar su evolución en tiempo real.
+\end{itemize}
+
+Además, el dashboard incluye variables globales para filtrar la visualización por:
+\begin{itemize}
+  \item Nivel de amenaza (threatVar): todos, ALTO, MEDIO, BAJO.
+  \item Periodo orbital máximo (periodMax): filtra los asteroides cuyo período orbital está por debajo de un umbral definido en días.
+\end{itemize}
 
 \clearpage
 
@@ -219,7 +319,15 @@ los resultados.
 
 \section{Bibliografia}
 
-\cite{Botpress}
+\cite{neows-api}
+\cite{Sentry-System}
+\cite{joke2k-faker}
+\cite{numpy}
+\cite{spark}
+\cite{kafka}
+\cite{prometheus}
+\cite{grafana}
+
 
 \printbibliography
 
