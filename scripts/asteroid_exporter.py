@@ -16,13 +16,16 @@ asteroid_threat_high      = Gauge("asteroid_threat_high_total", "Amenazas ALTO")
 asteroid_threat_medium    = Gauge("asteroid_threat_medium_total", "Amenazas MEDIO")
 asteroid_threat_low       = Gauge("asteroid_threat_low_total", "Amenazas BAJO")
 
-# --- gauges por-asteroide (label object_id, threat_level) ---
+# --- gauges por-objeto (label object_id, threat_level) ---
 mass_g      = Gauge("asteroid_mass_kg",              "Masa",              ["object_id", "threat_level"])
 density_g   = Gauge("asteroid_density_kg_m3",        "Densidad",          ["object_id", "threat_level"])
 distance_g  = Gauge("asteroid_min_distance_au",      "Distancia mínima",  ["object_id", "threat_level"])
 impact_g    = Gauge("asteroid_impact_probability",   "Impact prob.",      ["object_id", "threat_level"])
 period_g    = Gauge("asteroid_orbital_period_days",  "Periodo orbital",   ["object_id", "threat_level"])
-
+info_g = Gauge(
+    "asteroid_info", "JSON completo por objeto",
+    ["object_id", "json_raw"]
+)
 
 # =================== FUNCIONES ===================
 
@@ -59,6 +62,7 @@ def update_metrics():
                 distance_g .labels(oid, level).set(d.get("min_distance_au", 0))
                 impact_g   .labels(oid, level).set(d.get("impact_probability", 0))
                 period_g   .labels(oid, level).set(d.get("orbital_period_days", 0))
+                info_g.labels(oid, json.dumps(d)).set(1)
 
     asteroid_total        .set(total)
     asteroid_threat_high  .set(threat_cnt["ALTO"])
