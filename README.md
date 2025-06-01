@@ -1,5 +1,4 @@
-# AstoridTracking
-# ☄️ Asteroid Tracking & Risk Assessment System
+# ☄️ Asteroid Tracking
 
 Este proyecto implementa un sistema completo de procesamiento en tiempo real para la detección y análisis de asteroides cercanos a la Tierra (NEOs), con cálculo físico y orbital avanzado, utilizando Apache Spark y Kafka.
 
