@@ -22,6 +22,7 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{xcolor}
+\usepackage{amsmath}
 \usepackage[backend=biber]{biblatex}
 \addbibresource{webgrafia.bib}
 
@@ -194,6 +195,22 @@ las cuales 1 de ellas actúa como nodo maestro y las otras 3 como nodos esclavos
 El nodo maestro se encarga de gestionar el clúster, coordinando las tareas de procesamiento y almacenamiento,
 mientras que los nodos esclavos se encargan de ejecutar las tareas de procesamiento y almacenamiento de datos.
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/maquinas.PNG}
+    \caption{Maquinas virtuales del clúster}
+    \label{fig:my_label}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/cluster.png}
+    \caption{Controller y brokers}
+    \label{fig:my_label}
+\end{figure}
+
+\clearpage
+
 \section{Genereación de datos sintéticos}
 
 Como he mencionado anteriormente, el conjunto de datos se genera de forma sintética para simular la ingesta de datos en tiempo real.
@@ -207,12 +224,19 @@ Finalmente tenemos la generación de un archivo pipe o FIFO que se encargará de
 al productor de Kafka para simular la ingesta de datos en tiempo real de una API. El script \texttt{neo\_data\_producer.py} 
 actuará como productor, recibiendo los datos del archivo pipe y enviándolos al topic de Kafka correspondiente.
 
-\section{procesamiento de datos}
+\section{procesamiento de datos (ETL)}
 
 Para el procesamiento de datos se ha utilizado Apache Spark, que permite el procesamiento de grandes volúmenes de datos de 
 forma distribuida. Teniendo 3 archivos que actuarán como workers, los cuales se encargarán de procesar los datos
 recibidos del topic de Kafka \texttt{neo\_raw\_data}. Para ello tenemos el script \texttt{spark\_asteroidTrackingProcessing.py}, que se
 encargará de:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/worker1.PNG}
+    \caption{Ejemplo de worker}
+    \label{fig:my_label}
+\end{figure}
 
 \subsection{Consumidor}
 Utiliza Spark Structured Streaming para:
@@ -225,16 +249,147 @@ Utiliza Spark Structured Streaming para:
 \end{itemize}
 
 \subsection{Transformación de datos}
-Una vez leídos los datos en bruto, se aplican transformaciones para calcular métricas físicas y orbitales realistas de cada asteroide:
-
+Una vez leídos los datos en bruto, se aplican transformaciones para calcular métricas físicas y orbitales de cada asteroide:
+\\
+\begin{itemize}
+  \item Se le asigna un identificador único a cada asteroide (simulando a como se identifican en la realidad, pero puesto que son sinteticos
+  y necesitamos variedad se hará de forma aleatoria).
+  \begin{itemize}
+    \item YYYY es el año de la observación
+    \item L1, L2 son letras aleatorias (excepto "I" y "Z" en algunas posiciones)(simulando el sistema de clasificación de asteroides por quincenas).
+    \item NN es un número aleatorio entre 01 y 99 (simulando el número de descubrimiento del objeto).
+  \end{itemize}
+\end{itemize}
+Este identificador sigue una simplificación de las reglas reales del Minor Planet Center.
+\\
+Cada objeto generado tiene una aleatoriedad de replica que introduce variaciones en los datos para simular el seguimiento del objeto.
+Siguiendo a las metricas tenemos:
+\\
 \begin{itemize}
   \item Conversión de RA/DEC a coordenadas cartesianas tridimensionales (x, y, z) para averiguar la distancia del asteroide a la Tierra.
-  \item Cálculo de la masa del asteroide a partir de su diámetro y brillo, utilizando una fórmula simplificada. Sacando además
-  densidad, volumen y superficie.
-  \item Cálculo de la velocidad de escape en función de masa y radio.
-  \item Parametros orbitales (Ejes mayor y menor, Eccentricidad, Período orbital, inclinación orbital, Periapsis)
-  \item Clasificación de amenaza por probabilidad de impacto (alto > 0.01, Medio > 0.001, Bajo < 0.001)
 \end{itemize}
+Asumiendo una distancia fija d=1,000,000 km al objeto, se transforma la posición desde coordenadas esféricas RA/DEC a cartesianas:
+\begin{align*}
+  \text{RA}_{\text{rad}} &= \text{RA}_{\text{hours}} \times 15 \times \frac{\pi}{180} \\
+  \text{DEC}_{\text{rad}} &= \text{DEC}_{\text{deg}} \times \frac{\pi}{180} \\
+  x &= d \cdot \cos(\text{DEC}_{\text{rad}}) \cdot \cos(\text{RA}_{\text{rad}}) \\
+  y &= d \cdot \cos(\text{DEC}_{\text{rad}}) \cdot \sin(\text{RA}_{\text{rad}}) \\
+  z &= d \cdot \sin(\text{DEC}_{\text{rad}})
+\end{align*}
+
+\begin{itemize}
+  \item Distancia mínima al origen (en km y UA)
+\end{itemize}
+
+\begin{align*}
+  \text{distancia}_{\text{km}} &= \sqrt{x^2 + y^2 + z^2} \\
+  \text{distancia}_{\text{AU}} &= \frac{\text{distancia}_{\text{km}}}{149{,}597{,}870.7}
+\end{align*}
+
+\begin{itemize}
+  \item Cálculo de propiedades físicas (A partir del diámetro se derivan múltiples propiedades físicas)
+  \begin{itemize}
+    \item Radio:
+      \begin{align*}
+        r &= \frac{d}{2}
+      \end{align*}
+    \item Volumen del asteroide (asumido esférico):
+      \begin{align*}
+        V &= \frac{4}{3} \pi r^3
+      \end{align*}
+    \item Área superficial:
+      \begin{align*}
+        A &= 4 \pi r^2
+      \end{align*}
+    \item Densidad: valor fijo típico para roca: p=2600 kg/m3
+    \item Masa:
+      \begin{align*}
+        m &= V \cdot p
+      \end{align*}
+    \item Velocidad de escape:
+      \begin{align*}
+        v_{\text{escape}} &= \sqrt{\frac{2 G m}{r}}
+      \end{align*}
+  \end{itemize}
+\end{itemize}
+
+Donde:
+\begin{itemize}
+  \item d: diámetro en metros
+  \item r: radio
+  \item p=2600 kg/m3
+  \item $\text{G}=6.67430\times 10^{-11}\,\text{m}^3\text{kg}^{-1}\text{s}^{-2}$
+\end{itemize}
+
+\begin{itemize}
+  \item Parámetros orbitales básicos
+  \begin{itemize}
+    \item Eje semi-mayor (suponiendo órbita elíptica):
+      \begin{align*}
+        a &= \text{distancia}_{\text{AU}} \cdot 149{,}597{,}870{,}700 \text{ m}
+      \end{align*}
+    \item Excentricidad: valor fijo: e=0.3
+    \item Período orbital (en segundos y días):
+      \begin{align*}
+        T &= 2 \pi \sqrt{\frac{a^3}{G m}} \\
+        T_{\text{días}} &= \frac{T}{86400}
+      \end{align*}
+    \item Inclinación orbital: valor fijo: i=10 grados
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+  \item Cálculo de elementos orbitales avanzados
+  \begin{itemize}
+    \item Periapsis y apoapsis:
+      \begin{align*}
+        q &= a \cdot (1 - e) \\
+        Q &= a \cdot (1 + e)
+      \end{align*}
+    \item ¿Cruza la órbita terrestre? (Se compara si el perihelio es menor a 1.017 UA y el afelio mayor a 0.983 UA)
+      \begin{align*}
+        \text{Cruza órbita terrestre} \iff
+        \left(q < 1.017 \, \text{AU}\right) \land \left(Q > 0.983 \, \text{AU}\right)
+      \end{align*}
+    \item Factor de sincronía (para calcular la probabilidad de impacto):
+      \begin{align*}
+        \text{Factor de sincronía} = \frac{1}{\max\left(1, \left|T_{\text{días}} - 365.25\right|\right)}
+      \end{align*}
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+  \item Probabilidad de impacto
+\end{itemize}
+
+Si el objeto cruza la órbita terrestre, la probabilidad de impacto se estima mediante una fórmula determinista que considera tamaño, 
+distancia y sincronía temporal:
+
+\begin{align*}
+  P_{\text{impacto}} =
+  \left( \frac{\left(\frac{d}{1000}\right)^2}{\text{distancia}_{\text{AU}}^2 + 0.1} \right)
+  \cdot \text{Factor de sincronía} \cdot 0.01
+\end{align*}
+
+\begin{itemize}
+  \item Clasificación de nivel de amenaza (Según el valor de P impacto, se clasifica el riesgo)
+  \begin{itemize}
+    \item ALTO si P>0.05
+    \item MEDIO si 0.01<P<=0.05
+    \item BAJO si P<=0.01
+  \end{itemize}
+\end{itemize}
+
+Como podemos ver son calculos para metricas fisicas y orbitales que nos permitiran obtener conocimiento sobre cada objeto y el comportamiento
+de estos. Dando la posibilidad de realizar analisis y visualizaciones sobre estos datos. Esta seria la estructura del JSON que se generará yml
+se almacenará en HDFS:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/json.PNG}
+    \caption{Estructura JSON de los datos enriquecidos}
+    \label{fig:my_label}
+\end{figure}
 
 \subsection{Almacenamiento en HDFS}
 
@@ -265,6 +420,13 @@ los datos). La escritura está configurada para:
 
 El uso de checkpointLocation garantiza tolerancia a fallos y recuperación del estado del stream.
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/hdfs.PNG}
+    \caption{Controller y brokers}
+    \label{fig:my_label}
+\end{figure}
+
 \section{Visualización}
 
 Para la visualización de los datos como he mencionado anteriormente, se implementó una arquitectura de monitorización y visualización 
@@ -292,14 +454,15 @@ Para visualizar las métricas generadas por el exportador, se diseñó un dashbo
 que ofrece una visión clara, interactiva y dinámica del estado actual de los asteroides detectados.
 El dashboard contiene los siguientes paneles:
 \begin{itemize}
+  \item Número de asteroides procesados: gráfico de líneas que muestra la evolución del número de asteroides procesados en tiempo real.
   \item Distribución de amenaza: gráfico tipo donut que muestra el porcentaje de objetos clasificados como 
   ALTO, MEDIO o BAJO. Incluye enlaces interactivos que permiten filtrar el resto de paneles por nivel de amenaza.
   \item Top 50 asteroides por probabilidad de impacto: tabla ordenada por la métrica
   \\ 
   \texttt{asteroid\_impact\_probability}, 
   útil para identificar rápidamente los objetos más peligrosos.
-  \item Comparativa de masa y densidad: gráfico de barras que compara la masa con la densidad de los asteroides que presentan riesgo 
-  de impacto (\texttt{impact\_probability} > 0).
+  \item Tabla unilineal del asteroide seleccionado: muestra información detallada.
+  \item Comparativa de masa y densidad: gráfico de barras que muestra la masa o densidad a lo largo del tiempo.
   \item Evolución de la distancia mínima (AU): gráfico de líneas que muestra la distancia mínima estimada para cada asteroide con 
   posibilidad de impacto, permitiendo observar su evolución en tiempo real.
 \end{itemize}
@@ -308,12 +471,69 @@ Además, el dashboard incluye variables globales para filtrar la visualización 
 \begin{itemize}
   \item Nivel de amenaza (threatVar): todos, ALTO, MEDIO, BAJO.
   \item Periodo orbital máximo (periodMax): filtra los asteroides cuyo período orbital está por debajo de un umbral definido en días.
+  \item Selección de asteroide (asteroidVar): permite seleccionar un asteroide específico para ver su información detallada en la tabla unilineal.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/dashboard.PNG}
+    \caption{Dashboard}
+    \label{fig:my_label}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/dashboard-2.PNG}
+    \caption{Dashboard}
+    \label{fig:my_label}
+\end{figure}
+
+\clearpage
+
+\section{Business Intelligence}
+
+Gracias al conjunto de datos enriquecidos y las métricas generadas, se pueden realizar análisis exploratorios para descubrir patrones y 
+tendencias en los objetos cercanos a la Tierra, tanto para aplicaciones científicas como operativas.
+
+\subsection{Detección y evaluación de riesgo en tiempo real}
+\begin{itemize}
+  \item Se identifican asteroides cercanos.
+  \item Se calcula su probabilidad de impacto usando una fórmula determinista basada en distancia mínima, diámetro, 
+  sincronía orbital y cruce con la órbita terrestre.
+  \item Se clasifican en niveles de amenaza (ALTO, MEDIO, BAJO) para priorizar la atención.
+  \item Distribución histórica de amenazas por nivel.
+  \item Visualización de la evolución del objeto a lo largo del tiempo.
+  \item Visualización de metricas físicas y orbitales de los asteroides para determinar su comportamiento y características.
+  \item Cuáles podrían requerir atención técnica o monitoreo adicional.
+  \item Qué asteroides tienen mayor probabilidad de retorno cercano en el futuro.
+\end{itemize}
+\subsection{Simulación de escenarios y entrenamiento de modelos}
+\begin{itemize}
+  \item Entrenar modelos de predicción de impacto.
+  \item Validar algoritmos de clasificación automática.
+  \item Generar datasets para entrenar modelos de machine learning.
+  \item Simular escenarios de impacto y evaluar consecuencias.
+\end{itemize}
+\subsection{Investigación científica}
+\begin{itemize}
+  \item Estudiar la composición y estructura de los asteroides.
+  \item Analizar la evolución de sus órbitas a lo largo del tiempo.
+  \item Investigar la formación y dinámica del sistema solar.
+  \item Comparar propiedades físicas con otros cuerpos celestes.
+  \item Identificar patrones en la distribución espacial de los NEOs.
 \end{itemize}
 
 \clearpage
 
 \section{Conclusión}
 
+AsteroidTracking es un sistema completo de Big Data que permite la detección y análisis en tiempo real de objetos cercanos a la Tierra,
+utilizando un conjunto de sinteticos basados en observaciones parecidas a las reales simulando una ingesta de datos en tiempo real.
+El sistema implementa todo el stack tecnológico necesario, desde la ingesta de datos con Kafka, el procesamiento de datos con Spark,
+hasta la visualización de los resultados con Grafana.
+\\
+En el repositorio de Github se puede encontrar el código fuente utilizado para cada script del proyecto y su configuración del cluster. Así como
+un video demostrativo del funcionamiento del sistema.
 
 \clearpage
 
@@ -327,6 +547,9 @@ Además, el dashboard incluye variables globales para filtrar la visualización 
 \cite{kafka}
 \cite{prometheus}
 \cite{grafana}
+\cite{Standard-asteroids-physical-characteristics}
+\cite{Movimiento-Orbital}
+\cite{Impact-probability}
 
 
 \printbibliography
