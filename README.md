@@ -69,12 +69,6 @@ Analizar flujos de datos astronómicos en tiempo real para:
 
 ---
 
-## 📝 Licencia
-
-MIT License © 2025 — *Desarrollado para análisis espacial y defensa planetaria*
-
----
-
 ## Video demostrativo
 
 https://drive.google.com/file/d/13vKx5eSw3hLBqD2dmviFjOQSFpeHfB5I/view?usp=drive_link
