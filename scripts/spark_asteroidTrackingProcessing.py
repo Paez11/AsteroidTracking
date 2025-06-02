@@ -164,7 +164,7 @@ risk_df = (orb_df
 enriched_df = (risk_df
     .drop("radius_m", "orbital_period_sec", "temporal_sync_factor", "crosses_earth_orbit"))
 
-# -------------------- 8. Escritura en Kafka ---------------
+# -------------------- 8. Escritura en HDFS ---------------
 # Serializamos todo el registro enriquecido como JSON string
 out_df = enriched_df \
     .withColumn("topic", F.lit("asteroid-events")) \
