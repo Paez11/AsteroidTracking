@@ -158,7 +158,7 @@ y análisis en tiempo real de objetos cercanos a la Tierra (NEOs, por sus siglas
 cometas, satélites y otros tipos de objetos potencialmente peligrosos. La idea principal es obtener estos datos
 a partir de un conjunto de datos base real proporcionado por la API de la NASA  \cite[(Sentry System)]{Sentry-System}.
 El inconveniente es que este conjunto de datos no es lo suficientemente grande ni contiene datos en tiempo real,
-por lo que he obtado por generar datos sintéticos.
+por lo que he optado por generar datos sintéticos.
 \\
 \\
 El objetivo final es crear un bussiness Intelligence que permita la visualización y análisis de estos datos,
@@ -224,7 +224,7 @@ Finalmente tenemos la generación de un archivo pipe o FIFO que se encargará de
 al productor de Kafka para simular la ingesta de datos en tiempo real de una API. El script \texttt{neo\_data\_producer.py} 
 actuará como productor, recibiendo los datos del archivo pipe y enviándolos al topic de Kafka correspondiente.
 
-\section{procesamiento de datos (ETL)}
+\section{Procesamiento de datos (ETL)}
 
 Para el procesamiento de datos se ha utilizado Apache Spark, que permite el procesamiento de grandes volúmenes de datos de 
 forma distribuida. Teniendo 3 archivos que actuarán como workers, los cuales se encargarán de procesar los datos
