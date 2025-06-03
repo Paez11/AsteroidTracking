@@ -1,5 +1,4 @@
 import json
-import uuid
 import time
 from datetime import datetime
 from faker import Faker
@@ -23,7 +22,7 @@ def generate_observation():
 
     return {
         "timestamp": datetime.utcnow().isoformat(),
-        "object_id": str(uuid.uuid4()),
+        "object_id": fake.uuid4().hex,  # ID único del objeto
         "celestial_coords": {
             "ra_hours": ra,
             "dec_degrees": dec
