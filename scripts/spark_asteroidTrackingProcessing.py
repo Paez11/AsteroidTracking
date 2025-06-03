@@ -145,15 +145,14 @@ risk_df = (orb_df
     .withColumn(
         "impact_probability",
         F.round(
-            F.when(F.col("crosses_earth_orbit") == 1,
-                    # (area proporcional) / (distancia² + amortiguador) × sincronía × 0,01
-                    (F.pow(F.col("diameter_m") / 1000.0, 2) /
-                     (F.pow(F.col("min_distance_au"), 2) + 0.1)) *
-                    F.col("temporal_sync_factor") * 0.01)
-             .otherwise(0.0),
+            F.when(F.rand() < 0.05, F.lit(0.06))  # 5% con probabilidad ALTO
+            .when(F.rand() < 0.10, F.lit(0.02)) # 10% con probabilidad MEDIO
+            .when(F.col("crosses_earth_orbit") == 1,
+                (F.pow(F.col("diameter_m") / 1000.0, 2) /
+                (F.pow(F.col("min_distance_au"), 2) + 0.1)) *
+                F.col("temporal_sync_factor") * 0.01)
+            .otherwise(F.lit(0.0)),
             6))
-
-    # Clasificación de amenaza
     .withColumn("threat_level",
                 F.when(F.col("impact_probability") > 0.05,  "ALTO")
                  .when(F.col("impact_probability") > 0.01, "MEDIO")
