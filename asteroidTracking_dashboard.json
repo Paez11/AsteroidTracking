@@ -291,7 +291,7 @@
           ],
           "show": false
         },
-        "frameIndex": 4,
+        "frameIndex": 0,
         "showHeader": true,
         "sortBy": [
           {
@@ -303,8 +303,10 @@
       "pluginVersion": "11.6.1",
       "targets": [
         {
-          "expr": "topk(50, asteroid_impact_probability{threat_level=~\"${threatVar}|ALTO|MEDIO|BAJO\"})",
+          "editorMode": "code",
+          "expr": "topk(50, asteroid_impact_probability{threat_level=~\"${threatVar}\"})",
           "legendFormat": "{{object_id}}",
+          "range": true,
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -464,7 +466,32 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "(2025 AC09)"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 14,
@@ -490,7 +517,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "max(asteroid_min_distance_au{threat_level=~\"${threatVar}|ALTO|MEDIO|BAJO\"}) by (object_id)\r\n  and\r\nmax(asteroid_impact_probability) by (object_id) > 0",
+          "expr": "max(asteroid_min_distance_au{threat_level=~\"${threatVar}\"}) by (object_id)",
           "legendFormat": "{{object_id}}",
           "range": true,
           "refId": "A",
@@ -548,7 +575,32 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "(2025 AA65) – Densidad"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 14,
@@ -586,7 +638,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "max(asteroid_mass_kg{threat_level=~\"${threatVar}|ALTO|MEDIO|BAJO\"}) by (object_id)\r\n  and\r\nmax(asteroid_impact_probability) by (object_id) > 0",
+          "expr": "max(asteroid_mass_kg{threat_level=~\"${threatVar}\"}) by (object_id)",
           "hide": true,
           "legendFormat": "{{object_id}} – Masa",
           "range": true,
@@ -598,7 +650,7 @@
         },
         {
           "editorMode": "code",
-          "expr": "max(asteroid_density_kg_m3{threat_level=~\"${threatVar}|ALTO|MEDIO|BAJO\"}) by (object_id)\r\n  and\r\nmax(asteroid_impact_probability) by (object_id) > 0",
+          "expr": "max(asteroid_density_kg_m3{threat_level=~\"${threatVar}\"}) by (object_id)",
           "legendFormat": "{{object_id}} – Densidad",
           "range": true,
           "refId": "B",
@@ -716,44 +768,28 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "",
+  "refresh": "10s",
   "schemaVersion": 41,
   "tags": [],
   "templating": {
     "list": [
       {
-        "allValue": "ALTO|MEDIO|BAJO",
-        "current": {
-          "text": "todos",
-          "value": "todos"
-        },
+        "allowCustomValue": true,
+        "current": {},
+        "definition": "label_values(threat_level)",
         "includeAll": true,
         "label": "Nivel de amenaza",
+        "multi": true,
         "name": "threatVar",
-        "options": [
-          {
-            "selected": true,
-            "text": "todos",
-            "value": "todos"
-          },
-          {
-            "selected": false,
-            "text": "ALTO",
-            "value": "ALTO"
-          },
-          {
-            "selected": false,
-            "text": "MEDIO",
-            "value": "MEDIO"
-          },
-          {
-            "selected": false,
-            "text": "BAJO",
-            "value": "BAJO"
-          }
-        ],
-        "query": "todos,ALTO,MEDIO,BAJO",
-        "type": "custom"
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(threat_level)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
       },
       {
         "current": {
@@ -811,13 +847,13 @@
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Asteroid Tracking",
   "uid": "denan5qag54w0a",
-  "version": 9,
+  "version": 16,
   "weekStart": ""
 }
