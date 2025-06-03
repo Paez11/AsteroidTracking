@@ -1,10 +1,10 @@
-# ☄️ Asteroid Tracking
+# Asteroid Tracking
 
 Este proyecto implementa un sistema completo de procesamiento en tiempo real para la detección y análisis de asteroides cercanos a la Tierra (NEOs), con cálculo físico y orbital avanzado, utilizando Apache Spark y Kafka.
 
 ---
 
-## 🚀 Objetivo
+## Objetivo
 
 Analizar flujos de datos astronómicos en tiempo real para:
 
@@ -14,27 +14,18 @@ Analizar flujos de datos astronómicos en tiempo real para:
 
 ---
 
-## 🧠 Funcionalidades clave
+## Funcionalidades clave
 
-- 📡 **Lectura desde Kafka**: ingesta continua de observaciones astronómicas simuladas.
-- 🧮 **Conversión RA/DEC a coordenadas cartesianas**
-- 🌌 **Cálculo de propiedades físicas**: masa, volumen, velocidad de escape, etc.
-- 🛰️ **Cálculo de parámetros orbitales**: semieje mayor, excentricidad, periapsis, período, etc.
-- ☢️ **Modelo determinista de riesgo de impacto**: basado en distancia mínima, sincronía orbital y cruce con la órbita terrestre.
-- 📤 **Salida en HDFS en formato JSON** para visualización con Grafana o análisis externo.
-
----
-
-## 📂 Estructura del proyecto
-
-📁 /src
-└── spark_AsteroidTrackingProcessing.py # Lógica de enriquecimiento y streaming
-📁 /data
-└── /output # Datos enriquecidos en HDFS
+- **Lectura desde Kafka**: ingesta continua de observaciones astronómicas simuladas.
+- **Conversión RA/DEC a coordenadas cartesianas**
+- **Cálculo de propiedades físicas**: masa, volumen, velocidad de escape, etc.
+- **Cálculo de parámetros orbitales**: semieje mayor, excentricidad, periapsis, período, etc.
+- **Modelo determinista de riesgo de impacto**: basado en distancia mínima, sincronía orbital y cruce con la órbita terrestre.
+- **Salida en HDFS en formato JSON** para visualización con Grafana o análisis externo.
 
 ---
 
-## 📊 Business Intelligence
+## Business Intelligence
 
 - Seguimiento y clasificación de amenazas en tiempo real
 - Estadísticas de riesgo acumulado y distribución de objetos por categoría
@@ -42,7 +33,7 @@ Analizar flujos de datos astronómicos en tiempo real para:
 
 ---
 
-## 🧪 Aplicaciones científicas
+## Aplicaciones científicas
 
 - Análisis poblacional de asteroides
 - Priorización de observación astronómica
@@ -51,7 +42,7 @@ Analizar flujos de datos astronómicos en tiempo real para:
 
 ---
 
-## ⚙️ Tecnologías usadas
+## Tecnologías usadas
 
 - Apache Spark (Structured Streaming)
 - Apache Kafka
@@ -61,7 +52,7 @@ Analizar flujos de datos astronómicos en tiempo real para:
 
 ---
 
-## ✅ Requisitos previos
+## Requisitos previos
 
 - Cluster con Spark, Kafka y HDFS funcionando
 - Topics de Kafka configurados (ej. `neo_raw_data`)
