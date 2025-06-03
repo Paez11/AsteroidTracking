@@ -211,6 +211,22 @@ mientras que los nodos esclavos se encargan de ejecutar las tareas de procesamie
 
 \clearpage
 
+Siguiendo con la estructura, tenemos kafka que se encargará de la ingesta de datos en tiempo real,
+este constituido por un controlador y 2 brokers, actuando como un sistema de mensajería distribuido 
+que permite la publicación y suscripción de mensajes en tiempo real.
+Los datos se envían a un topic específico que se encargará de recibir los datos y enviarlos al consumidor de
+Spark Streaming, que se encargará de procesar los datos en tiempo real.
+Spark lee los datos, los procesa recibiendo un job que lo divide en tareas y los distribuye a los workers
+para su procesamiento. Cada worker se encarga de procesar los datos y enviarlos a HDFS, donde se almacenarán
+los datos procesados en formato JSON.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=.7\textwidth]{assets/proyecto/estructura.png}
+    \caption{Estructura del sistema}
+    \label{fig:my_label}
+\end{figure}
+
 \section{Genereación de datos sintéticos}
 
 Como he mencionado anteriormente, el conjunto de datos se genera de forma sintética para simular la ingesta de datos en tiempo real.
@@ -231,13 +247,6 @@ forma distribuida. Teniendo 3 archivos que actuarán como workers, los cuales se
 recibidos del topic de Kafka \texttt{neo\_raw\_data}. Para ello tenemos el script \texttt{spark\_asteroidTrackingProcessing.py}, que se
 encargará de:
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=.7\textwidth]{assets/proyecto/worker1.PNG}
-    \caption{Ejemplo de worker}
-    \label{fig:my_label}
-\end{figure}
-
 \subsection{Consumidor}
 Utiliza Spark Structured Streaming para:
 
@@ -256,7 +265,7 @@ Una vez leídos los datos en bruto, se aplican transformaciones para calcular m�
   y necesitamos variedad se hará de forma aleatoria).
   \begin{itemize}
     \item YYYY es el año de la observación
-    \item L1, L2 son letras aleatorias (excepto "I" y "Z" en algunas posiciones)(simulando el sistema de clasificación de asteroides por quincenas).
+    \item L1, L2 son letras aleatorias (excepto I y Z en algunas posiciones)(simulando el sistema de clasificación de asteroides por quincenas).
     \item NN es un número aleatorio entre 01 y 99 (simulando el número de descubrimiento del objeto).
   \end{itemize}
 \end{itemize}
@@ -381,8 +390,14 @@ distancia y sincronía temporal:
 \end{itemize}
 
 Como podemos ver son calculos para metricas fisicas y orbitales que nos permitiran obtener conocimiento sobre cada objeto y el comportamiento
-de estos. Dando la posibilidad de realizar analisis y visualizaciones sobre estos datos. Esta seria la estructura del JSON que se generará yml
-se almacenará en HDFS:
+de estos. Dando la posibilidad de realizar analisis y visualizaciones sobre estos datos.
+\\
+Este ultimo tipo de calculo es algo un tanto artificial ya que en la practica real se utilizan otro tipo de calculos
+y algoritmos más complejos. Por lo que he utilizado calculos más sencillos y deterministas para llevar a cabo el proyecto.
+También si se revisa el script se puede ver que se han aumentado las probabilidades de impacto en ALTO Y MEDIO para 
+tener variedad de datos y poder realizar pruebas de visualización y análisis.
+\\
+Esta seria la estructura del JSON que se generará y se almacenará en HDFS:
 
 \begin{figure}[h!]
     \centering
@@ -390,6 +405,8 @@ se almacenará en HDFS:
     \caption{Estructura JSON de los datos enriquecidos}
     \label{fig:my_label}
 \end{figure}
+
+\clearpage
 
 \subsection{Almacenamiento en HDFS}
 
@@ -405,18 +422,6 @@ los datos). La escritura está configurada para:
     \item Fecha (date=YYYY-MM-DD)
   \end{itemize}
 \end{itemize}
-
-\begin{verbatim}
-  query = (out_df
-    .writeStream
-    .format("json")
-    .partitionBy("topic", "partition", "date")
-    .option("path", "hdfs://cluster-bda:9000/bda/kafka/AsteroidTracking")
-    .option("checkpointLocation", "hdfs://cluster-bda:9000/bda/kafka
-    /AsteroidTracking/checkpoints/asteroid-stream")
-    .outputMode("append")
-    .start())
-\end{verbatim}
 
 El uso de checkpointLocation garantiza tolerancia a fallos y recuperación del estado del stream.
 
@@ -537,7 +542,7 @@ un video demostrativo del funcionamiento del sistema.
 
 \clearpage
 
-\section{Bibliografia}
+\section{Webgrafia}
 
 \cite{neows-api}
 \cite{Sentry-System}
